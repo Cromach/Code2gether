@@ -1,3 +1,4 @@
+const fs = require('fs');
 const express = require('express');
 const http = require('http');
 const app = express();
@@ -12,11 +13,38 @@ let roomsVal = [];
 
 app.use(cookieParser());
 
+//https://stackabuse.com/writing-to-files-in-node-js/
+
+app.get('/:id/download/:ext', function(req, res){
+    let id = req.params.id;
+    let ext = req.params.ext;
+    let room = findRoom(id);
+    const filename = id + '.' + ext
+    const path = 'files/' + filename;
+    if(room != -1) {
+        let code = roomsVal[room].code;
+        fs.writeFile(path, code, (err) => {
+            if (err) throw err;
+            console.log('Fichier créé')
+            let file = fs.createReadStream(path);
+            res.writeHead(200, {'Content-disposition': 'attachment; filename=' + filename});
+            file.on('end', function() {
+                fs.unlink(path, function() {
+                  console.log("Fichier supprimé")
+                });
+            });
+            file.pipe(res);
+        });
+    }
+});
+
 app.get('/', function(req, res) {
     res.redirect("/"+makeid(7));
 });
 
-app.get('/favicon.ico', (req, res) => res.status(204));
+app.get('/favicon.ico', function(req, res) {
+    res.status(204)
+});
 
 app.get('/:id', function(req, res) {
     let id = req.params.id, room = findRoom(id), host = false, user;
@@ -98,7 +126,7 @@ io.on('connect', function (socket) {
         console.log(userID);
         if(room != -1 && roomsVal[room].users[user].edit) {
             roomsVal[room].code = code;
-            console.log(roomsVal[room]);
+            //console.log(roomsVal[room]);
             socket.to(id).emit('edit', code);
         }
     });

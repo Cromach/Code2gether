@@ -299,7 +299,7 @@
 		});
 
 		$("#language").change(function(){
-			var editorModel = editor.getModel();
+			let editorModel = editor.getModel();
 			monaco.editor.setModelLanguage(editorModel, $(this).val());
 			socket.emit('changeLanguage', $(this).val());
 		});
@@ -310,12 +310,6 @@
 
 		<% } %>
 
-		function setLanguage(language, editor) {
-			var editorModel = editor.getModel();
-			monaco.editor.setModelLanguage(editorModel, language);
-			$("#language").val(language);
-		}
-
 		$("#send").on("keyup", function(event) {
 			if(event.keyCode==13) {
 				socket.emit('sendMsg', $(this).val());
@@ -323,6 +317,20 @@
 				$(this).val("");
 			}
 		});
+
+		$('.download').on('click', function () {
+			let editorModel = editor.getModel();
+			let id = editorModel.getLanguageIdentifier().id;
+			let ext = monaco.languages.getLanguages()[id-1].extensions[0].substr(1)
+			let iframe = $('<iframe class="iframeDownload" src="' + window.location.pathname + '/download/' + ext + '" style="display:none"></iframe>');
+			$(".download").append(iframe);
+		});
+
+		function setLanguage(language, editor) {
+			let editorModel = editor.getModel();
+			monaco.editor.setModelLanguage(editorModel, language);
+			$("#language").val(language);
+		}
 
 	</script>
 
